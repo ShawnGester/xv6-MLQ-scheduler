@@ -28,7 +28,9 @@ struct proc* proc3[NPROC];
 
 int
 setpri(int PID, int pri) {
-	if (pri > 3 || pri < 0) {
+	cprintf("pri-->%d\n", pri);
+  cprintf("pri-->%d\n", pri);
+  if (pri > 3 || pri < 0) {
     return -1;
   }
   struct proc* p;
@@ -40,68 +42,67 @@ setpri(int PID, int pri) {
   int prevPri = p->priority;
   int i;
   //Removes proc from old priority queue
-  if (prevPri != pri) {
-	  if (prevPri == 3) {
-		  for (i = 0; i < NPROC; ++i) {
-			  if (proc3[i] != 0 && proc3[i]->pid == PID)
-				  break;
-		  }
-		  for (i = i; i < NPROC - 1; i++) {
-			  if (proc3[i + 1] != 0) {
-				  proc3[i] = proc3[i + 1];
-			  }
-			  else {
-				  proc3[i] = 0;
-				  break;
-			  }
-		  }
-	  }
-	  else if (prevPri == 2) {
-		  for (i = 0; i < NPROC; ++i) {
-			  if (proc2[i] != 0 && proc2[i]->pid == PID)
-				  break;
-		  }
-		  for (i = i; i < NPROC - 1; i++) {
-			  if (proc2[i + 1] != 0) {
-				  proc2[i] = proc2[i + 1];
-			  }
-			  else {
-				  proc2[i] = 0;
-				  break;
-			  }
-		  }
-	  }
-	  else if (prevPri == 1) {
-		  for (i = 0; i < NPROC; ++i) {
-			  if (proc1[i] != 0 && proc1[i]->pid == PID)
-				  break;
-		  }
-		  for (i = i; i < NPROC - 1; i++) {
-			  if (proc1[i + 1] != 0) {
-				  proc1[i] = proc1[i + 1];
-			  }
-			  else {
-				  proc1[i] = 0;
-				  break;
-			  }
-		  }
-	  }
-	  else {
-		  for (i = 0; i < NPROC; ++i) {
-			  if (proc0[i] != 0 && proc0[i]->pid == PID)
-				  break;
-		  }
-		  for (i = i; i < NPROC - 1; i++) {
-			  if (proc0[i + 1] != 0) {
-				  proc0[i] = proc0[i + 1];
-			  }
-			  else {
-				  proc0[i] = 0;
-				  break;
-			  }
-		  }
-	  }
-  }
+	if (prevPri == 3) {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc3[i] != 0 && proc3[i]->pid == PID)
+				break;
+		}
+		for (i = i; i < NPROC - 1; i++) {
+			if (proc3[i + 1] != 0) {
+				proc3[i] = proc3[i + 1];
+			}
+			else {
+				proc3[i] = 0;
+				break;
+			}
+		}
+	}
+	else if (prevPri == 2) {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc2[i] != 0 && proc2[i]->pid == PID)
+				break;
+		}
+		for (i = i; i < NPROC - 1; i++) {
+			if (proc2[i + 1] != 0) {
+				proc2[i] = proc2[i + 1];
+			}
+			else {
+				proc2[i] = 0;
+				break;
+			}
+		}
+	}
+	else if (prevPri == 1) {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc1[i] != 0 && proc1[i]->pid == PID)
+				break;
+		}
+		for (i = i; i < NPROC - 1; i++) {
+			if (proc1[i + 1] != 0) {
+				proc1[i] = proc1[i + 1];
+			}
+			else {
+				proc1[i] = 0;
+				break;
+			}
+		}
+	}
+	else {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc0[i] != 0 && proc0[i]->pid == PID)
+				break;
+		}
+		for (i = i; i < NPROC - 1; i++) {
+			if (proc0[i + 1] != 0) {
+				proc0[i] = proc0[i + 1];
+			}
+			else {
+				proc0[i] = 0;
+				break;
+			}
+		}
+	}
+  
   p->priority = pri;
 //places p in its new queue
   if (p->priority == 3) {
@@ -149,6 +150,7 @@ getpri(int PID) {
   if(PID < 1) {
     return -1;
   }
+  cprintf("get->%d\n", p->priority);
   return p->priority;
 }
 
@@ -373,9 +375,44 @@ fork2(int pri)
   pid = np->pid;
 
   acquire(&ptable.lock);
-
   np->state = RUNNABLE;
-  setpri(np->pid, curproc->priority);
+  np->priority = pri;
+  //places p in its new queue
+  if (np->priority == 3) {
+	  for (i = 0; i < NPROC; i++) {
+		  if (proc3[i] == 0) {
+			  proc3[i] = np;
+			  break;
+		  }
+	  }
+  }
+  else if (np->priority == 2) {
+	  for (i = 0; i < NPROC; i++) {
+		  if (proc2[i] == 0) {
+			  proc2[i] = np;
+			  break;
+		  }
+	  }
+  }
+  else if (np->priority == 1) {
+	  for (i = 0; i < NPROC; i++) {
+		  if (proc1[i] == 0) {
+			  proc1[i] = np;
+			  break;
+		  }
+	  }
+  }
+  else {
+	  for (i = 0; i < NPROC; i++) {
+		  if (proc0[i] == 0) {
+			  proc0[i] = np;
+			  break;
+		  }
+	  }
+  }
+  // increment total times moved to back of queue
+  np->qtail[pri]++;
+
   release(&ptable.lock);
 
   return pid;
@@ -383,8 +420,8 @@ fork2(int pri)
 
 int
 fork(void) {
-  struct proc* proc1 = myproc();
-  return fork2(getpri(proc1->pid));
+  struct proc* processes1 = myproc();
+  return fork2(getpri(processes1->pid));
 }
 
 // Exit the current process.  Does not return.
@@ -498,7 +535,6 @@ scheduler(void)
     sti();
 	for (i = 0; i < NPROC; ++i) {
 		if (proc3[i] != 0 && proc3[i]->state == RUNNABLE) {
-			cprintf("%s\n", "prio3hit");
 			p = proc3[i];
 			break;
 		}
@@ -547,6 +583,7 @@ scheduler(void)
 	
 	// REMOVE BADDIES from queue
 	if (p->state == ZOMBIE || p->state == UNUSED || p->state == SLEEPING) {
+		// cprintf("%d\n", p->pid);
 		if (p->priority == 3) {
 			for (int j = i; j < NPROC; ++j) {
 				if (proc3[j + 1] != 0) {	// shift left
@@ -762,11 +799,46 @@ static void
 wakeup1(void *chan)
 {
   struct proc *p;
+  int i = 0;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
 	  if (p->state == SLEEPING && p->chan == chan) {
 		  p->state = RUNNABLE;
-		  setpri(p->pid, p->priority);
+		  //places p in its new queue
+		  if (p->priority == 3) {
+			  for (i = 0; i < NPROC; i++) {
+				  if (proc3[i] == 0) {
+					  proc3[i] = p;
+					  break;
+				  }
+			  }
+		  }
+		  else if (p->priority == 2) {
+			  for (i = 0; i < NPROC; i++) {
+				  if (proc2[i] == 0) {
+					  proc2[i] = p;
+					  break;
+				  }
+			  }
+		  }
+		  else if (p->priority == 1) {
+			  for (i = 0; i < NPROC; i++) {
+				  if (proc1[i] == 0) {
+					  proc1[i] = p;
+					  break;
+				  }
+			  }
+		  }
+		  else {
+			  for (i = 0; i < NPROC; i++) {
+				  if (proc0[i] == 0) {
+					  proc0[i] = p;
+					  break;
+				  }
+			  }
+		  }
+		  // increment total times moved to back of queue
+		  p->qtail[p->priority]++;
 	  }
 }
 
