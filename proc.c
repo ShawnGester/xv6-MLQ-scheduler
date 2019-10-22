@@ -31,6 +31,7 @@ setpri(int PID, int pri) {
 	if (pri > 3 || pri < 0) {
     return -1;
   }
+  struct proc* p;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
     if (p->pid == PID) {
       break;
@@ -108,22 +109,22 @@ setpri(int PID, int pri) {
     }
   } else if (p->priority == 2) {
      for(i = 0; i < NPROC; i++) {
-      if(proc3[i] == 0) {
-        proc3[i] = p;
+      if(proc2[i] == 0) {
+        proc2[i] = p;
         break;
       }
     }
   } else if (p->priority == 1) {
     for(i = 0; i < NPROC; i++) {
-      if(proc3[i] == 0) {
-        proc3[i] = p;
+      if(proc1[i] == 0) {
+        proc1[i] = p;
         break;
       }
     }
   } else {
     for(i = 0; i < NPROC; i++) {
-      if(proc3[i] == 0) {
-        proc3[i] = p;
+      if(proc0[i] == 0) {
+        proc0[i] = p;
         break;
       }
     }
@@ -364,7 +365,7 @@ fork2(int pri)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-  setpri(np->pid, pri);
+  setpri(np->pid, curproc->priority);
   release(&ptable.lock);
 
   return pid;
@@ -372,9 +373,8 @@ fork2(int pri)
 
 int
 fork(void) {
-  struct proc* myproc = myproc();
-  fork2(myproc->priority);
-  return myproc->pid;
+  struct proc* proc1 = myproc();
+  return fork2(getpri(proc1->pid));
 }
 
 // Exit the current process.  Does not return.
