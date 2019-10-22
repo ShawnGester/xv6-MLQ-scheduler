@@ -40,64 +40,68 @@ setpri(int PID, int pri) {
   int prevPri = p->priority;
   int i;
   //Removes proc from old priority queue
-  if (prevPri == 3) {
-    for (i  = 0; i < NPROC; ++i) {
-      if (proc3[i] != 0 && proc3[i]->pid == PID)
-          break;
-    }
-    for(i = i; i < NPROC-1; i++) {
-      if(proc3[i+1] != 0) {
-        proc3[i] = proc3[i+1];
-      }
-      else{
-        proc3[i] = 0;
-        break;
-      }
-    }
-  } else if (prevPri == 2) {
-    for (i  = 0; i < NPROC; ++i) {
-      if (proc2[i] != 0 && proc2[i]->pid == PID)
-          break;
-    }
-    for(i = i; i < NPROC-1; i++) {
-      if(proc2[i+1] != 0) {
-        proc2[i] = proc2[i+1];
-      }
-      else{
-        proc2[i] = 0;
-        break;
-      }
-    }
-  } else if (prevPri == 1) {
-    for (i  = 0; i < NPROC; ++i) {
-      if (proc1[i] != 0 && proc1[i]->pid == PID)
-          break;
-    }
-    for(i = i; i < NPROC-1; i++) {
-      if(proc1[i+1] != 0) {
-        proc1[i] = proc1[i+1];
-      }
-      else{
-        proc1[i] = 0;
-        break;
-      }
-    }
-  } else {
-    for (i  = 0; i < NPROC; ++i) {
-      if (proc0[i] != 0 && proc0[i]->pid == PID)
-          break;
-    }
-    for(i = i; i < NPROC-1; i++) {
-      if(proc0[i+1] != 0) {
-        proc0[i] = proc0[i+1];
-      }
-      else{
-        proc0[i] = 0;
-        break;
-      }
-    }
+  if (prevPri != pri) {
+	  if (prevPri == 3) {
+		  for (i = 0; i < NPROC; ++i) {
+			  if (proc3[i] != 0 && proc3[i]->pid == PID)
+				  break;
+		  }
+		  for (i = i; i < NPROC - 1; i++) {
+			  if (proc3[i + 1] != 0) {
+				  proc3[i] = proc3[i + 1];
+			  }
+			  else {
+				  proc3[i] = 0;
+				  break;
+			  }
+		  }
+	  }
+	  else if (prevPri == 2) {
+		  for (i = 0; i < NPROC; ++i) {
+			  if (proc2[i] != 0 && proc2[i]->pid == PID)
+				  break;
+		  }
+		  for (i = i; i < NPROC - 1; i++) {
+			  if (proc2[i + 1] != 0) {
+				  proc2[i] = proc2[i + 1];
+			  }
+			  else {
+				  proc2[i] = 0;
+				  break;
+			  }
+		  }
+	  }
+	  else if (prevPri == 1) {
+		  for (i = 0; i < NPROC; ++i) {
+			  if (proc1[i] != 0 && proc1[i]->pid == PID)
+				  break;
+		  }
+		  for (i = i; i < NPROC - 1; i++) {
+			  if (proc1[i + 1] != 0) {
+				  proc1[i] = proc1[i + 1];
+			  }
+			  else {
+				  proc1[i] = 0;
+				  break;
+			  }
+		  }
+	  }
+	  else {
+		  for (i = 0; i < NPROC; ++i) {
+			  if (proc0[i] != 0 && proc0[i]->pid == PID)
+				  break;
+		  }
+		  for (i = i; i < NPROC - 1; i++) {
+			  if (proc0[i + 1] != 0) {
+				  proc0[i] = proc0[i + 1];
+			  }
+			  else {
+				  proc0[i] = 0;
+				  break;
+			  }
+		  }
+	  }
   }
-
   p->priority = pri;
 //places p in its new queue
   if (p->priority == 3) {
@@ -129,6 +133,7 @@ setpri(int PID, int pri) {
       }
     }
   }
+  // increment total times moved to back of queue
   p->qtail[pri]++;
   return pri;
 }
@@ -296,7 +301,12 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
-
+  // add init to prio queues
+  proc3[0] = p;
+  // set priority to 3
+  p->priority = 3;
+  // increment qtail
+  p->qtail[3]++;
   release(&ptable.lock);
 }
 
@@ -477,35 +487,175 @@ wait(void)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p = 0;
   struct cpu *c = mycpu();
+  int i = 0;
   c->proc = 0;
   
   for(;;){
-    // Enable interrupts on this processor.
+    
+	// Enable interrupts on this processor.
     sti();
-
+	for (i = 0; i < NPROC; ++i) {
+		if (proc3[i] != 0 && proc3[i]->state == RUNNABLE) {
+			cprintf("%s\n", "prio3hit");
+			p = proc3[i];
+			break;
+		}
+	}
+	// look for next runnable process IF prio 3 is empty
+	if (p == 0) {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc2[i] != 0 && proc2[i]->state == RUNNABLE) {
+				p = proc2[i];
+				break;
+			}
+		}
+	}
+	if (p == 0) {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc1[i] != 0 && proc1[i]->state == RUNNABLE) {
+				p = proc1[i];
+				break;
+			}
+		}
+	}
+	if (p == 0) {
+		for (i = 0; i < NPROC; ++i) {
+			if (proc0[i] != 0 && proc0[i]->state == RUNNABLE) {
+				p = proc0[i];
+				break;
+			}
+		}
+	}
+	// idle :(
+	if (p == 0) {
+		continue;
+	}
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+    acquire(&ptable.lock);	// LOOOOOOCK
+    
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+	
+	// REMOVE BADDIES from queue
+	if (p->state == ZOMBIE || p->state == UNUSED || p->state == SLEEPING) {
+		if (p->priority == 3) {
+			for (int j = i; j < NPROC; ++j) {
+				if (proc3[j + 1] != 0) {	// shift left
+					proc3[j] = proc3[j + 1];
+				}
+				else {
+					proc3[j] = 0;
+					break;
+				}
+			}
+		} else if (p->priority == 2) {
+			for (int j = i; j < NPROC; ++j) {
+				if (proc2[j + 1] != 0) {	// shift left
+					proc2[j] = proc2[j + 1];
+				}
+				else {
+					proc2[j] = 0;
+					break;
+				}
+			}
+		} else if (p->priority == 1) {
+			for (int j = i; j < NPROC; ++j) {
+				if (proc1[j + 1] != 0) {	// shift left
+					proc1[j] = proc1[j + 1];
+				}
+				else {
+					proc1[j] = 0;
+					break;
+				}
+			}
+		} else {
+			for (int j = i; j < NPROC; ++j) {
+				if (proc0[j + 1] != 0) {	// shift left
+					proc0[j] = proc0[j + 1];
+				}
+				else {
+					proc0[j] = 0;
+					break;
+				}
+			}
+		}
+		// we're done with this tick cuz this process was a baddie
+		p = 0;
+		release(&ptable.lock);
+		continue;
+	}
+	
+	// increment timeslice and total ticks at prio level
+	p->timeSlice++;
+	p->ticks[p->priority]++;
+	// IF DONE USING CPU
+	if (p->timeSlice == 4*(3-(p->priority)) +8) {
+		// reset timeslice
+		p->timeSlice = 0;
+		// move to back of prio queue
+		if (p->priority == 3) {
+			for (i = i; i < NPROC; ++i) {
+				if (proc3[i + 1] != 0) {	// shift left
+					proc3[i] = proc3[i + 1];
+				}
+				else {
+					// insert the good-gone-bad boi
+					proc3[i] = p;
+					break;
+				}
+			}
+		}
+		else if (p->priority == 2) {
+			for (i = i; i < NPROC; ++i) {
+				if (proc2[i + 1] != 0) {	// shift left
+					proc2[i] = proc2[i + 1];
+				}
+				else {
+					proc2[i] = p;
+					break;
+				}
+			}
+		}
+		else if (p->priority == 1) {
+			for (i = i; i < NPROC; ++i) {
+				if (proc1[i + 1] != 0) {	// shift left
+					proc1[i] = proc1[i + 1];
+				}
+				else {
+					proc1[i] = p;
+					break;
+				}
+			}
+		}
+		else {
+			for (i = i; i < NPROC; ++i) {
+				if (proc0[i + 1] != 0) {	// shift left
+					proc0[i] = proc0[i + 1];
+				}
+				else {
+					proc0[i] = p;
+					break;
+				}
+			}
+		}
+		// increment qtail
+		p->qtail[p->priority]++;
+	}
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-    }
-    release(&ptable.lock);
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+	p = 0;
+    c->proc = 0;
+    release(&ptable.lock);	// UNLOOOOOOOOOOCK
 
   }
 }
@@ -614,8 +764,10 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
-      p->state = RUNNABLE;
+	  if (p->state == SLEEPING && p->chan == chan) {
+		  p->state = RUNNABLE;
+		  setpri(p->pid, p->priority);
+	  }
 }
 
 // Wake up all processes sleeping on chan.
