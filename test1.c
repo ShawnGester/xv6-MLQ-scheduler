@@ -19,7 +19,7 @@
 int
 main(int argc, char *argv[])
 {
-  struct pstat st;
-  check(getpinfo(&st) == 0, "getpinfo");
+  //struct pstat st;
+ // check(getpinfo(&st) == 0, "getpinfo");
   getpri(getpid());
 }
