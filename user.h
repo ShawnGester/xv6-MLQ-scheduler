@@ -26,7 +26,7 @@ int sleep(int);
 int uptime(void);
 int setpri(int PID, int pri);
 int getpri(int PID);
-int fork2(int PID);
+int fork2(int pri);
 int getpinfo(struct pstat*);
 // ulib.c
 int stat(const char*, struct stat*);
