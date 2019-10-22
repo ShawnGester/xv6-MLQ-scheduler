@@ -28,7 +28,7 @@ struct proc* proc3[NPROC];
 
 int
 setpri(int PID, int pri) {
-  if (pri > 3 || pri < 0) {
+  if (pri > 3 || pri < 0 || PID < 1) {
     return -1;
   }
   struct proc* p;
