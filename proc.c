@@ -494,7 +494,6 @@ scheduler(void)
   c->proc = 0;
   
   for(;;){
-    
 	  // Enable interrupts on this processor.
     sti();
     for (i = 0; i < NPROC; ++i) {
@@ -544,7 +543,7 @@ scheduler(void)
 
     swtch(&(c->scheduler), p->context);
     switchkvm();
-	  
+
     p->timeSlice++;
     p->ticks[p->priority]++;
     
@@ -601,7 +600,7 @@ scheduler(void)
     // increment timeslice and total ticks at prio level
   //	cprintf("\npid: %d\n prio: %d\n total ticks: %d\n qtail: %d\n", p->pid, p->priority, p->ticks[p->priority], p->qtail[p->priority]);
     // IF DONE USING CPU
-    if (p->timeSlice == 4*(3-(p->priority)) +8) {
+    if (p->timeSlice == (4*(3-(p->priority)) +8)) {
       // reset timeslice
       p->timeSlice = 0;
       // move to back of prio queue
