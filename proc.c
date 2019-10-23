@@ -549,7 +549,7 @@ scheduler(void)
     p->ticks[p->priority]++;
     
     // REMOVE BADDIES from queue
-    if (p->state == ZOMBIE || p->state == UNUSED || p->state == SLEEPING) {
+    if (p->state != RUNNABLE) {
       // cprintf("%d\n", p->pid);
       if (p->priority == 3) {
         for (int j = i; j < NPROC; ++j) {
