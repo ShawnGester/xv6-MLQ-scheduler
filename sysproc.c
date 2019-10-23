@@ -21,6 +21,8 @@ sys_setpri(void)
     return -1;
   if(pri>3)
     return -1;
+  if(pid<1)
+    return -1;
   return setpri(pid, pri);
 }
 int
@@ -28,6 +30,8 @@ sys_getpri(void)
 {
   int pid;
   if (argint(0, &pid) < 0)
+    return -1;
+  if (pid<1)
     return -1;
   return getpri(pid);
 }

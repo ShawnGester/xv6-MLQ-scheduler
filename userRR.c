@@ -22,5 +22,5 @@ main(int argc, char* argv[]) {
 			}
 		}
 	}*/
-	return 1;
+	exit(0);
 }
